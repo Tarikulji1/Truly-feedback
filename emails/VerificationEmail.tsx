@@ -55,7 +55,7 @@ export default function VerificationEmail({
         </Row>
         <Row>
           <Button
-            href={`https://yourdomain.com/verify/${username}`}
+            href={`http://localhost:3000/verify/${username}`}
             style={{
               backgroundColor: "#007BFF",
               color: "#ffffff",
@@ -69,14 +69,6 @@ export default function VerificationEmail({
             Verify Here
           </Button>
         </Row>
-        {/* <Row>
-          <Button
-            href={`http://localhost:3000/verify/${username}`}
-            style={{ color: '#61dafb' }}
-          >
-            Verify here
-          </Button>
-        </Row> */}
       </Section>
     </Html>
   );
