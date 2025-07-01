@@ -1,6 +1,6 @@
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User";
-
+import { NextResponse } from "next/server";
 import { Message } from "@/model/User";
 
 export async function POST(request:Request) {
@@ -12,14 +12,14 @@ export async function POST(request:Request) {
         if (!user) {
             return Response.json({
             success: false,
-            message: "Not Authenticated"
+            message: "User not found"
         },
         {status:404})
         }
 
         // is user accepting the messages
-         if (!user.isAcceptingMessage) {
-            return Response.json({
+         if (!user.isAcceptingMessages) {
+            return NextResponse.json({
             success: false,
             message: "User is not accepting the messages"
         },
@@ -30,14 +30,14 @@ export async function POST(request:Request) {
         user.messages.push(newMessage as Message)
         await user.save()
 
-        return Response.json(
+        return NextResponse.json(
             {
             success: true,
             messages: "Message sent successfuly"
         }, {status:200})
     } catch (error) {
         console.log("Error adding messages ", error)
-        return Response.json(
+        return NextResponse.json(
             {
             success: false,
             message: "Internal server error"

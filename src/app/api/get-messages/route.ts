@@ -2,54 +2,59 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/options";
 import dbConnect from "@/lib/dbConnect";
 import UserModel from "@/model/User";
-import {User} from "next-auth";
+import { NextResponse } from "next/server"; 
 import mongoose from "mongoose";
 
 
 export async function GET(request:Request) {
-    await dbConnect();
-
-    const session = await getServerSession(authOptions)
-    const user: User = session?.user as User
-
-    if (!session || !session.user) {
-        return Response.json({
-            success: false,
-            message: "Not Authenticated"
-        },
-        {status:401})
-    }
-
-    const userId = new mongoose.Types.ObjectId(user._id);
     try {
-        const user = await UserModel.aggregate([
-            {$match: {id: userId}},
-            {$unwind: '$messages'},
-            {$sort: {'messages.createdAt': -1}},
-            {$group: {_id: '$_id', messages: {$push: '$messages'}}}
-        ])
-        if (!user || user.length === 0) {
-            return Response.json(
+        await dbConnect();
+        const session = await getServerSession(authOptions);
+        if (!session || !session.user) {
+            return NextResponse.json({
+                success: false,
+                message: "Not Authenticated"
+            }, {status:401})
+        }
+        
+        // Validate and convert user ID
+        const userId = session.user._id;
+        if (!mongoose.Types.ObjectId.isValid(userId!)) {
+            return NextResponse.json(
+                { success: false, message: "Invalid user ID format"},
+                { status: 400 }
+            );
+        }
+        const objectId = new mongoose.Types.ObjectId(userId);
+
+        // Fetch user with sorted messages
+        const user = await UserModel.findById(objectId).select("messages.content messages.createdAt").lean();
+        if (!user) {
+            return NextResponse.json(
                 {
                     success: false,
                     message: "User not found"
                 },
-                {status:401}
+                {status:404}
             )
         }
-        return Response.json(
+        const messages = (user.messages ?? []) as { content: string; createdAt: Date | string }[];
+        const sortedMessages = messages.sort(
+            (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        return NextResponse.json(
             {
                 success: true,
-                messages: user[0].messages
+                messages: sortedMessages,
             },
             {status:200}
-        )
+        );
     } catch (error) {
-        console.log("An unexpected occured: ", error)
-        return Response.json({
+        console.error("Error fetching messages: ", error)
+        return NextResponse.json({
             success: false,
-            message: "Not Authenticated"
+            message: "Internal server while fethcing messages"
         },
-        {status:500})
+        {status:500});
     }
 }

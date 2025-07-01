@@ -14,7 +14,7 @@ export async function GET(request: Request){
     try {
         const {searchParams} = new URL(request.url)
         const queryParam = {
-            username: searchParams.get('username')
+            username: searchParams.get('username')?.trim().toLowerCase() ?? "",
         }
 
         // validate with zod
@@ -39,10 +39,16 @@ export async function GET(request: Request){
             }, {status:400})
         }
 
-        return Response.json({
+        return new Response(JSON.stringify({
                 success: true,
                 message: "Username is unique"
-            }, {status:201})
+            }), {
+                status:200,
+                headers: {
+                    "Content-Type": "application/json",
+                    "Cache-Control": "no-store"
+                }
+            });
 
     } catch (error) {
         console.log("Error checking username ", error);

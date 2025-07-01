@@ -1,0 +1,147 @@
+// 'use client' must be at the top
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
+import Autoplay from 'embla-carousel-autoplay';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
+// import '@/styles/globals.css';
+
+type Message = {
+  title: string;
+  content: string;
+  recieved: string;
+};
+
+export default function Home() {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | undefined>();
+
+  useEffect(() => {
+    // Dynamically import messages.json
+    import('@/messages.json')
+      .then(({ default: data }) => {
+        setMessages(data || []);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setError('Failed to load messages.');
+        setLoading(false);
+      });
+  }, []);
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, idx) => (
+          <Skeleton key={idx} className="h-64 w-full rounded-md" />
+        ))}
+      </div>
+    );
+  }
+
+  if (messages.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>No messages available.</p>
+      </div>
+    );
+  }
+
+  return (
+    <main className="flex flex-col items-center justify-center px-4 md:px-24 py-12 space-y-8">
+      {/* Date picker using Popover and Calendar */}
+      <div className="w-full max-w-xs">
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="w-full px-4 py-2 border rounded-md text-left">
+              {selectedDate ? new Date(selectedDate).toLocaleDateString() : 'Select a date'}
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={selectedDate ? new Date(selectedDate) : undefined}
+              onSelect={(date) => setSelectedDate(date ? date.toString() : undefined)}
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      {/* Carousel of messages */}
+      <section className="w-full max-w-xs">
+        <Carousel plugins={[Autoplay({ delay: 2000 })]} className="">
+          <CarouselContent>
+            {messages.map((msg, index) => (
+              <CarouselItem key={index}>
+                <Card>
+                  <CardHeader>{msg.title}</CardHeader>
+                  <CardContent className="h-48 flex items-center justify-center">
+                    <p className="text-center">{msg.content}</p>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious aria-label="Previous message" />
+          <CarouselNext aria-label="Next message" />
+        </Carousel>
+      </section>
+
+      {/* Data table of messages */}
+      <section className="w-full overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Title</TableHead>
+              <TableHead>Content</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {messages.map((msg, idx) => (
+              <TableRow key={idx}>
+                <TableCell>{msg.title}</TableCell>
+                <TableCell>{msg.content}</TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </section>
+
+      {/* Footer */}
+      <footer className="text-center p-4 md:p-6">
+        <p className="text-sm text-gray-500">
+          &copy; {new Date().getFullYear()} Truly-Feedback. All rights reserved.
+        </p>
+      </footer>
+    </main>
+  );
+}
