@@ -10,7 +10,7 @@ export async function POST(request:Request) {
     try {
         const user = await UserModel.findOne({username})
         if (!user) {
-            return Response.json({
+            return NextResponse.json({
             success: false,
             message: "User not found"
         },

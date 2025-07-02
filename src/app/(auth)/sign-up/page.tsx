@@ -70,6 +70,7 @@ function SignUpPage() {
       const axiosError = error as AxiosError<ApiResponse>;
       let errorMessage = axiosError.response?.data.message;
       toast.error(errorMessage);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -142,6 +143,19 @@ function SignUpPage() {
                   <FormMessage />
                 </FormItem>
               )}
+            />
+            <FormField 
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Confirm Password</FormLabel>
+                <FormControl>
+                  <Input placeholder="confirm password" {...field} type="password" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
             />
             <Button type="submit" disabled={isSubmitting || isCheckingUsername} className="w-full">
               {isSubmitting ? 

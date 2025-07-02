@@ -9,12 +9,11 @@ export async function POST(request: Request) {
 
     try {
         const {username, email, password} = await request.json()
-        const existingUserVerifiedByUsername = await UserModel.findOne({
-            username,
-            isVerified: true
+        const existingUserByUsername = await UserModel.findOne({
+            username
         });
 
-        if (existingUserVerifiedByUsername) {
+        if (existingUserByUsername) {
             return NextResponse.json({
                 success: false,
                 message: "Username is already taken"
@@ -49,7 +48,7 @@ export async function POST(request: Request) {
                 verifyCode,
                 verifyCodeExpiry: expiryDate,
                 isVerified: false,
-                isAcceptingMessage: true,
+                isAcceptingMessages: true,
                 messages: []
             })
 
